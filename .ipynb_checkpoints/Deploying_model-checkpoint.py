@@ -2,12 +2,9 @@ import streamlit as st
 import numpy as np
 import pickle
 import re
-import random
 
 # Load the saved models
 svc_model = pickle.load(open('svc_model.pkl', 'rb'))
-gnb_model = pickle.load(open('gnb_model.pkl', 'rb'))
-rfc_model = pickle.load(open('rfc_model.pkl', 'rb'))
 
 # Load the label encoder
 with open('label_encoder.pkl', 'rb') as f:
@@ -39,6 +36,12 @@ st.markdown("""
     .content {
         margin-top: 80px;
     }
+    .bot-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-bottom: 5px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -54,11 +57,22 @@ if 'input_symptoms' not in st.session_state:
 if 'initial_greeting' not in st.session_state:
     st.session_state.initial_greeting = True
 
+# SVG icon for the bot with escaped curly braces
+bot_svg = """
+<svg class="bot-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <circle cx="32" cy="32" r="32" fill="#f1f0f0"/>
+    <path d="M32 4a28 28 0 1 0 28 28A28 28 0 0 0 32 4Zm0 52A24 24 0 1 1 56 32 24 24 0 0 1 32 56Z" fill="#d0d0d0"/>
+    <circle cx="22" cy="24" r="4" fill="#000"/>
+    <circle cx="42" cy="24" r="4" fill="#000"/>
+    <path d="M22 36h20a10 10 0 0 1-20 0Z" fill="#000"/>
+</svg>
+"""
+
 # Function to display bot message with avatar
 def display_bot_message(message):
     st.markdown(f"""
         <div style="display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 10px;">
-            <img src="avatars/bot.png" style="width: 40px; height: 40px; border-radius: 50%; margin-bottom: 5px;" />
+            {bot_svg}
             <div style="max-width: 60%; text-align: left; padding: 10px; background-color: #f1f0f0; border-radius: 10px; border: 1px solid #d0d0d0; color: #000;">
                 <strong>Bot:</strong> {message}
             </div>
@@ -91,12 +105,8 @@ def process_and_predict():
 
             input_features = np.array(list(symptoms_dict.values())).reshape(1, -1)
 
-            # Randomly select a model
-            models = [svc_model, gnb_model, rfc_model]
-            model = random.choice(models)
-
             # Predict the disease
-            prediction = model.predict(input_features)
+            prediction = svc_model.predict(input_features)
             prediction_label = le.inverse_transform(prediction)[0]
 
             # Display the prediction
